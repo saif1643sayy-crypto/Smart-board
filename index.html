@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Extension Board – Live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8edf0;--ink:#12202b;--mute:#586a77;--card:#fff;--line:#cdd8de;--on:#0b8a69;--warn:#d99a00;--bad:#c92c45;--off:#7d8c96}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;font-variant-numeric:tabular-nums;line-height:1.4}
+main{max-width:920px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:1.15rem;font-weight:600;margin:0 0 14px;color:var(--mute)}
+.status{border-radius:18px;padding:22px 22px 20px;color:#fff;background:var(--off);transition:background .4s}
+body[data-state=online] .status{background:var(--on)}
+body[data-state=fault] .status{background:var(--bad)}
+.status .big{display:flex;align-items:center;gap:14px;font-size:clamp(2rem,7vw,3.4rem);font-weight:800;letter-spacing:-.02em;line-height:1.05}
+.dot{width:.4em;height:.4em;border-radius:50%;background:#fff;flex:none}
+body[data-state=online] .dot{animation:pulse 1.8s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 #ffffffaa}100%{box-shadow:0 0 0 .5em #fff0}}
+.status p{margin:8px 0 0;opacity:.92}
+.grid{display:grid;gap:14px;margin-top:14px;grid-template-columns:1fr}
+@media(min-width:700px){.grid{grid-template-columns:1fr 1fr}.wide{grid-column:1/-1}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;transition:opacity .4s}
+body[data-state=offline] .card{opacity:.55}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.card h2{margin:0;font-size:1.05rem;font-weight:600}
+.tag{font-size:.85rem;font-weight:600;padding:3px 10px;border-radius:99px;background:#e3e9ed;color:var(--mute)}
+.tag.on{background:#d6f1e8;color:var(--on)}
+.nums{display:flex;gap:26px;margin:14px 0 12px}
+.nums b{display:block;font-size:2rem;font-weight:800;letter-spacing:-.02em;line-height:1}
+.nums span{font-size:.85rem;color:var(--mute)}
+.bar{height:10px;background:#e3e9ed;border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--on);border-radius:99px;transition:width .5s,background .3s}
+.bar i.warn{background:var(--warn)}.bar i.bad{background:var(--bad)}
+.hint{margin:6px 0 0;font-size:.8rem;color:var(--mute)}
+svg{width:100%;height:80px;display:block;margin-top:10px}
+svg polyline{fill:none;stroke:var(--ink);stroke-width:2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+footer{margin-top:18px;font-size:.8rem;color:var(--mute)}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body data-state="offline">
+<main>
+  <h1>Smart Extension Board</h1>
+
+  <section class="status" aria-live="polite">
+    <div class="big"><span class="dot"></span><span id="stText">Waiting for device</span></div>
+    <p id="stSub">No data received yet.</p>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <div class="row"><h2>Socket 1</h2><span class="tag" id="r1">–</span></div>
+      <div class="nums"><div><b id="i1">–</b><span>Current (A)</span></div><div><b id="p1">–</b><span>Power (VA)</span></div></div>
+      <div class="bar"><i id="b1"></i></div>
+      <p class="hint">Bar fills toward the overload limit.</p>
+    </section>
+
+    <section class="card">
+      <div class="row"><h2>Socket 2</h2><span class="tag" id="r2">–</span></div>
+      <div class="nums"><div><b id="i2">–</b><span>Current (A)</span></div><div><b id="p2">–</b><span>Power (VA)</span></div></div>
+      <div class="bar"><i id="b2"></i></div>
+      <p class="hint">Bar fills toward the overload limit.</p>
+    </section>
+
+    <section class="card">
+      <div class="row"><h2>Board temperature</h2><span class="tag" id="fan">Fan –</span></div>
+      <div class="nums"><div><b id="t">–</b><span>Degrees C</span></div></div>
+      <div class="bar"><i id="bt"></i></div>
+      <p class="hint">Bar fills toward the overheat cut-off.</p>
+    </section>
+
+    <section class="card">
+      <div class="row"><h2>Total power</h2><span class="tag" id="tot">–</span></div>
+      <svg viewBox="0 0 300 60" preserveAspectRatio="none" role="img" aria-label="Total power over the last readings"><polyline id="spark" points=""/></svg>
+      <p class="hint">Last 60 readings.</p>
+    </section>
+  </div>
+
+  <footer>Power = current × 230 V (apparent power, unity power factor assumed).</footer>
+</main>
+
+<script>
+/* ---- Settings: change these ---- */
+const CONFIG = {
+  // Any URL that returns the device JSON. Example for Firebase Realtime Database:
+  DATA_URL: "https://smart-electriccal-extension-default-rtdb.asia-southeast1.firebasedatabase.app/device.json",
+  POLL_MS: 2000,           // how often the page asks for data
+  OFFLINE_AFTER_MS: 8000,  // no new data for this long = offline
+  VOLTAGE: 230, OVERLOAD_A: 5, OVERHEAT_C: 45, FAN_ON_C: 35
+};
+/* Expected JSON from the ESP8266:
+   { "i1":0.42, "i2":1.10, "t":31, "r1":1, "r2":0, "fault":"none", "up":1234 }
+   "up" must change on every upload (e.g. seconds since boot) — it proves the device is alive.
+   fault: "none" | "overload" | "overheat".  Add ?demo to the page URL to preview without hardware. */
+
+const $ = id => document.getElementById(id);
+const demo = new URLSearchParams(location.search).has("demo");
+let last = null, lastKey = null, lastChange = 0, hist = [], demoUp = 0;
+
+const isOn = v => v === true || v === 1 || v === "1" || String(v).toUpperCase() === "ON";
+const num = v => (typeof v === "number" && isFinite(v)) ? v : null;
+const fix = (v, d) => v === null ? "–" : v.toFixed(d);
+
+function fake() {
+  demoUp += 2;
+  const cycle = Math.floor(demoUp / 20) % 3;
+  return { i1: cycle === 1 ? 0 : 0.6 + Math.random() * .3, i2: 1.8 + Math.random() * .4,
+           t: 30 + Math.random() * 3, r1: cycle !== 1, r2: true, fault: "none", up: demoUp };
+}
+
+async function poll() {
+  try {
+    let d;
+    if (demo) d = fake();
+    else {
+      const r = await fetch(CONFIG.DATA_URL, { cache: "no-store" });
+      if (!r.ok) throw new Error("bad response");
+      d = await r.json();
+    }
+    if (!d || typeof d !== "object") throw new Error("no data");
+    const key = d.up !== undefined ? String(d.up) : JSON.stringify(d);
+    if (key !== lastKey) {
+      lastKey = key; lastChange = Date.now();
+      const i1 = num(d.i1) || 0, i2 = num(d.i2) || 0;
+      hist.push((i1 + i2) * CONFIG.VOLTAGE);
+      if (hist.length > 60) hist.shift();
+    }
+    last = d;
+  } catch (e) { /* keep last data; offline timer handles it */ }
+  render();
+}
+
+function ago(ms) {
+  const s = Math.round(ms / 1000);
+  if (s < 60) return s + " s ago";
+  if (s < 3600) return Math.round(s / 60) + " min ago";
+  return Math.round(s / 3600) + " h ago";
+}
+
+function setSocket(n, cur, relay) {
+  $("i" + n).textContent = fix(cur, 2);
+  $("p" + n).textContent = cur === null ? "–" : Math.round(cur * CONFIG.VOLTAGE);
+  const tag = $("r" + n);
+  tag.textContent = relay === null ? "–" : relay ? "On" : "Off";
+  tag.className = "tag" + (relay ? " on" : "");
+  const ratio = cur === null ? 0 : Math.min(cur / CONFIG.OVERLOAD_A, 1);
+  const bar = $("b" + n);
+  bar.style.width = (ratio * 100) + "%";
+  bar.className = ratio >= 1 ? "bad" : ratio > .8 ? "warn" : "";
+}
+
+function render() {
+  const age = Date.now() - lastChange;
+  const alive = last && age < CONFIG.OFFLINE_AFTER_MS;
+  const fault = last ? String(last.fault || "none").toLowerCase() : "none";
+  const faulted = alive && fault !== "none";
+
+  document.body.dataset.state = !alive ? "offline" : faulted ? "fault" : "online";
+
+  if (!last) { $("stText").textContent = "Waiting for device"; $("stSub").textContent = "No data received yet."; }
+  else if (!alive) { $("stText").textContent = "Device offline"; $("stSub").textContent = "Last seen " + ago(age) + ". Showing the last known readings."; }
+  else if (faulted) { $("stText").textContent = fault === "overheat" ? "Overheat – sockets off" : "Overload – sockets off"; $("stSub").textContent = "Press a button on the board to reset. Updated " + ago(age) + "."; }
+  else { $("stText").textContent = "Device online"; $("stSub").textContent = "Updated " + ago(age) + "."; }
+
+  if (!last) return;
+  const i1 = num(last.i1), i2 = num(last.i2), t = num(last.t);
+  const r1 = last.r1 === undefined ? null : isOn(last.r1), r2 = last.r2 === undefined ? null : isOn(last.r2);
+  setSocket(1, i1, r1); setSocket(2, i2, r2);
+
+  $("t").textContent = fix(t, 0);
+  const tr = t === null ? 0 : Math.min(t / CONFIG.OVERHEAT_C, 1);
+  $("bt").style.width = (tr * 100) + "%";
+  $("bt").className = tr >= 1 ? "bad" : tr > .8 ? "warn" : "";
+  const fanOn = (t !== null && t > CONFIG.FAN_ON_C) || r1 || r2;
+  $("fan").textContent = "Fan " + (fanOn ? "on" : "off");
+  $("fan").className = "tag" + (fanOn ? " on" : "");
+
+  const total = ((i1 || 0) + (i2 || 0)) * CONFIG.VOLTAGE;
+  $("tot").textContent = Math.round(total) + " VA";
+  const max = Math.max(100, ...hist);
+  $("spark").setAttribute("points", hist.map((v, k) => (k * 300 / Math.max(hist.length - 1, 1)).toFixed(1) + "," + (56 - v / max * 52).toFixed(1)).join(" "));
+}
+
+poll();
+setInterval(poll, CONFIG.POLL_MS);
+setInterval(render, 1000);
+</script>
+</body>
+</html>
