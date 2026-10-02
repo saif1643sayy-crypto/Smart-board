@@ -107,10 +107,14 @@ async function poll() {
     if (!d || typeof d !== "object") throw 0;
     const key = d.up !== undefined ? String(d.up) : JSON.stringify(d);
     if (key !== lastKey) {
-      const now = Date.now(), p = ((num(d.i1) || 0) + (num(d.i2) || 0)) * CONFIG.VOLTAGE;
-      if (lastKey !== null) wh += p * Math.min((now - lastChange) / 1000, 10) / 3600;
-      lastKey = key; lastChange = now; peak = Math.max(peak, p);
-      hist.push(p); if (hist.length > 60) hist.shift();
+      const first = lastKey === null;   // first load is only a baseline, not proof the device is alive
+      lastKey = key;
+      if (!first) {
+        const now = Date.now(), p = ((num(d.i1) || 0) + (num(d.i2) || 0)) * CONFIG.VOLTAGE;
+        if (lastChange) wh += p * Math.min((now - lastChange) / 1000, 10) / 3600;
+        lastChange = now; peak = Math.max(peak, p);
+        hist.push(p); if (hist.length > 60) hist.shift();
+      }
     }
     last = d;
   } catch (e) {}
@@ -138,10 +142,17 @@ function render() {
   document.body.dataset.state = !alive ? "offline" : faulted ? "fault" : "online";
 
   if (!last) { $("stText").textContent = "Waiting for device"; $("stSub").textContent = "No data received yet."; }
-  else if (!alive) { $("stText").textContent = "Device offline"; $("stSub").textContent = "Last seen " + ago(age) + ". Showing last known readings."; }
+  else if (!alive) { $("stText").textContent = "Device offline"; $("stSub").textContent = lastChange ? "Last seen " + ago(age) + ". Meters reset until it is back." : "No live data from the device."; }
   else if (faulted) { $("stText").textContent = fault === "overheat" ? "Overheat – sockets off" : "Overload – sockets off"; $("stSub").textContent = "Press a button on the board to reset."; }
   else { $("stText").textContent = "Device online"; $("stSub").textContent = "Updated " + ago(age) + "."; }
-  if (!last) return;
+  if (!alive) {
+    const lt = "Limit " + CONFIG.OVERLOAD_A + " A / " + CONFIG.OVERLOAD_A * CONFIG.VOLTAGE + " VA";
+    for (const id of ["s1", "s2"]) { setG(id, "–", 0, "Offline", false, lt); setArc(id + "p", "–", 0); }
+    setG("tm", "–", 0, "Offline", false, "Cut-off at " + CONFIG.OVERHEAT_C + " °C");
+    $("tot").textContent = "–";
+    $("fan").textContent = "Fan –"; $("fan").className = "tag";
+    return;
+  }
 
   const i1 = num(last.i1), i2 = num(last.i2), t = num(last.t);
   const r1 = last.r1 === undefined ? null : isOn(last.r1), r2 = last.r2 === undefined ? null : isOn(last.r2);
