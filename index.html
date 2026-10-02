@@ -32,6 +32,7 @@ body[data-state=offline] .card{opacity:.5;filter:grayscale(.7)}
 .card h2{margin:0;font-size:1rem;font-weight:600;color:var(--mute)}
 .tag{font-size:.8rem;font-weight:600;padding:3px 11px;border-radius:99px;background:#ffffff14;color:var(--mute)}
 .tag.on{background:#35e0a122;color:var(--ok)}
+#s1tag,#s2tag{font-size:1rem;padding:6px 16px}#s1tag.on,#s2tag.on{box-shadow:0 0 16px #35e0a155}
 .gauge{position:relative;width:170px;margin:14px auto 6px}
 .gauge svg{display:block;width:100%;transform:rotate(-90deg)}
 .gauge circle{fill:none;stroke-width:9;stroke-linecap:round}
@@ -156,8 +157,28 @@ function render() {
 
   const i1 = num(last.i1), i2 = num(last.i2), t = num(last.t);
   const r1 = last.r1 === undefined ? null : isOn(last.r1), r2 = last.r2 === undefined ? null : isOn(last.r2);
-  const rl = r => r === null ? "–" : r ? "Relay on" : "Relay off";
+  const rl = r => r === null ? "–" : r ? "● Socket ON" : "○ Socket OFF";
   const lim = CONFIG.OVERLOAD_A * CONFIG.VOLTAGE, p1 = (i1 || 0) * CONFIG.VOLTAGE, p2 = (i2 || 0) * CONFIG.VOLTAGE;
+  const lt = "Limit " + CONFIG.OVERLOAD_A + " A / " + lim + " VA";
+  setG("s1", fix(i1, 2), (i1 || 0) / CONFIG.OVERLOAD_A, rl(r1), r1, lt); setArc("s1p", Math.round(p1), p1 / lim);
+  setG("s2", fix(i2, 2), (i2 || 0) / CONFIG.OVERLOAD_A, rl(r2), r2, lt); setArc("s2p", Math.round(p2), p2 / lim);
+  setG("tm", fix(t, 0), (t || 0) / CONFIG.OVERHEAT_C, "Limit " + CONFIG.OVERHEAT_C + "°C", false, "Cut-off at " + CONFIG.OVERHEAT_C + " °C");
+
+  const fanOn = (t !== null && t > CONFIG.FAN_ON_C) || r1 || r2;
+  $("fan").textContent = "Fan " + (fanOn ? "on" : "off"); $("fan").className = "tag" + (fanOn ? " on" : "");
+  const total = ((i1 || 0) + (i2 || 0)) * CONFIG.VOLTAGE;
+  $("tot").textContent = Math.round(total);
+  $("wh").textContent = wh.toFixed(2); $("pk").textContent = Math.round(peak);
+  const max = Math.max(100, ...hist);
+  const pts = hist.map((v, k) => (k * 300 / Math.max(hist.length - 1, 1)).toFixed(1) + "," + (56 - v / max * 50).toFixed(1)).join(" ");
+  $("spark").setAttribute("points", pts);
+  $("area").setAttribute("points", hist.length ? pts + " 300,60 0,60" : "");
+}
+
+poll(); setInterval(poll, CONFIG.POLL_MS); setInterval(render, 1000);
+</script>
+</body>
+</html>* CONFIG.VOLTAGE;
   const lt = "Limit " + CONFIG.OVERLOAD_A + " A / " + lim + " VA";
   setG("s1", fix(i1, 2), (i1 || 0) / CONFIG.OVERLOAD_A, rl(r1), r1, lt); setArc("s1p", Math.round(p1), p1 / lim);
   setG("s2", fix(i2, 2), (i2 || 0) / CONFIG.OVERLOAD_A, rl(r2), r2, lt); setArc("s2p", Math.round(p2), p2 / lim);
