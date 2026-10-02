@@ -7,187 +7,163 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#e8edf0;--ink:#12202b;--mute:#586a77;--card:#fff;--line:#cdd8de;--on:#0b8a69;--warn:#d99a00;--bad:#c92c45;--off:#7d8c96}
+:root{--bg:#0a101c;--ink:#e8eef7;--mute:#8fa0b8;--line:#ffffff17;--ok:#35e0a1;--warn:#ffc247;--bad:#ff5470;--off:#6b7a90}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;font-variant-numeric:tabular-nums;line-height:1.4}
-main{max-width:920px;margin:0 auto;padding:20px 16px 40px}
-h1{font-size:1.15rem;font-weight:600;margin:0 0 14px;color:var(--mute)}
-.status{border-radius:18px;padding:22px 22px 20px;color:#fff;background:var(--off);transition:background .4s}
-body[data-state=online] .status{background:var(--on)}
-body[data-state=fault] .status{background:var(--bad)}
-.status .big{display:flex;align-items:center;gap:14px;font-size:clamp(2rem,7vw,3.4rem);font-weight:800;letter-spacing:-.02em;line-height:1.05}
-.dot{width:.4em;height:.4em;border-radius:50%;background:#fff;flex:none}
-body[data-state=online] .dot{animation:pulse 1.8s ease-out infinite}
-@keyframes pulse{0%{box-shadow:0 0 0 0 #ffffffaa}100%{box-shadow:0 0 0 .5em #fff0}}
-.status p{margin:8px 0 0;opacity:.92}
+body{margin:0;min-height:100vh;color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;font-variant-numeric:tabular-nums;background:radial-gradient(900px 500px at 85% -10%,#17386455,transparent),var(--bg)}
+main{max-width:980px;margin:0 auto;padding:18px 16px 40px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;color:var(--mute);font-size:.9rem}
+header b{color:var(--ink);font-size:1.15rem;font-weight:600}
+.hero{border-radius:22px;padding:24px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px;border:1px solid var(--line);background:linear-gradient(135deg,#0c4a44,#0b1d33);transition:background .5s}
+body[data-state=offline] .hero{background:linear-gradient(135deg,#232c3b,#141b27)}
+body[data-state=fault] .hero{background:linear-gradient(135deg,#6a1428,#2a0d17)}
+.big{display:flex;align-items:center;gap:14px;font-size:clamp(1.9rem,6.5vw,3.2rem);font-weight:800;letter-spacing:-.02em;line-height:1.05}
+.dot{width:.36em;height:.36em;border-radius:50%;background:var(--off);flex:none}
+body[data-state=online] .dot{background:var(--ok);animation:pulse 1.8s ease-out infinite}
+body[data-state=fault] .dot{background:var(--bad)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 #35e0a199}100%{box-shadow:0 0 0 .55em #35e0a100}}
+.sub{margin:8px 0 0;color:#ffffffb8;font-size:.95rem}
+.tp{text-align:right}.tp b{display:block;font-size:clamp(1.8rem,6vw,2.8rem);font-weight:800;line-height:1}
+.tp span{color:#ffffffa0;font-size:.85rem}
 .grid{display:grid;gap:14px;margin-top:14px;grid-template-columns:1fr}
-@media(min-width:700px){.grid{grid-template-columns:1fr 1fr}.wide{grid-column:1/-1}}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;transition:opacity .4s}
-body[data-state=offline] .card{opacity:.55}
-.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.card h2{margin:0;font-size:1.05rem;font-weight:600}
-.tag{font-size:.85rem;font-weight:600;padding:3px 10px;border-radius:99px;background:#e3e9ed;color:var(--mute)}
-.tag.on{background:#d6f1e8;color:var(--on)}
-.nums{display:flex;gap:26px;margin:14px 0 12px}
-.nums b{display:block;font-size:2rem;font-weight:800;letter-spacing:-.02em;line-height:1}
-.nums span{font-size:.85rem;color:var(--mute)}
-.bar{height:10px;background:#e3e9ed;border-radius:99px;overflow:hidden}
-.bar i{display:block;height:100%;width:0;background:var(--on);border-radius:99px;transition:width .5s,background .3s}
-.bar i.warn{background:var(--warn)}.bar i.bad{background:var(--bad)}
-.hint{margin:6px 0 0;font-size:.8rem;color:var(--mute)}
-svg{width:100%;height:80px;display:block;margin-top:10px}
-svg polyline{fill:none;stroke:var(--ink);stroke-width:2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
-footer{margin-top:18px;font-size:.8rem;color:var(--mute)}
-:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+@media(min-width:760px){.grid{grid-template-columns:repeat(2,1fr)}.wide{grid-column:1/-1}}
+.card{background:#ffffff0a;border:1px solid var(--line);border-radius:18px;padding:18px;transition:opacity .5s,filter .5s}
+body[data-state=offline] .card{opacity:.5;filter:grayscale(.7)}
+.row{display:flex;justify-content:space-between;align-items:center}
+.card h2{margin:0;font-size:1rem;font-weight:600;color:var(--mute)}
+.tag{font-size:.8rem;font-weight:600;padding:3px 11px;border-radius:99px;background:#ffffff14;color:var(--mute)}
+.tag.on{background:#35e0a122;color:var(--ok)}
+.gauge{position:relative;width:170px;margin:14px auto 6px}
+.gauge svg{display:block;width:100%;transform:rotate(-90deg)}
+.gauge circle{fill:none;stroke-width:9;stroke-linecap:round}
+.tr{stroke:#ffffff12}.fg{stroke:var(--ok);transition:stroke-dasharray .6s,stroke .3s}
+.fg.warn{stroke:var(--warn)}.fg.bad{stroke:var(--bad)}
+.gv{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.gv b{font-size:2.1rem;font-weight:800;line-height:1}.gv span{font-size:.8rem;color:var(--mute);margin-top:2px}
+.pair{display:flex;justify-content:center;gap:12px}.pair .gauge{width:50%;max-width:150px;margin:14px 0 6px}.pair .gv b{font-size:1.6rem}
+.hint{text-align:center;margin:4px 0 0;font-size:.85rem;color:var(--mute)}
+.stats{display:flex;gap:28px;margin-top:6px}
+.stats b{display:block;font-size:1.5rem;font-weight:800}.stats span{font-size:.8rem;color:var(--mute)}
+svg.sp{width:100%;height:90px;display:block;margin-top:12px}
+.sp polyline{fill:none;stroke:var(--ok);stroke-width:2.2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.sp polygon{fill:#35e0a118}
+footer{margin-top:18px;font-size:.78rem;color:var(--mute)}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body data-state="offline">
 <main>
-  <h1>Smart Extension Board</h1>
+  <header><b>Smart Extension Board</b><span id="clock"></span></header>
 
-  <section class="status" aria-live="polite">
-    <div class="big"><span class="dot"></span><span id="stText">Waiting for device</span></div>
-    <p id="stSub">No data received yet.</p>
+  <section class="hero" aria-live="polite">
+    <div><div class="big"><span class="dot"></span><span id="stText">Waiting for device</span></div><p class="sub" id="stSub">No data received yet.</p></div>
+    <div class="tp"><b id="tot">–</b><span>Total power (VA)</span></div>
   </section>
 
-  <div class="grid">
-    <section class="card">
-      <div class="row"><h2>Socket 1</h2><span class="tag" id="r1">–</span></div>
-      <div class="nums"><div><b id="i1">–</b><span>Current (A)</span></div><div><b id="p1">–</b><span>Power (VA)</span></div></div>
-      <div class="bar"><i id="b1"></i></div>
-      <p class="hint">Bar fills toward the overload limit.</p>
-    </section>
+  <div class="grid" id="grid"></div>
 
+  <div class="grid" id="grid2">
     <section class="card">
-      <div class="row"><h2>Socket 2</h2><span class="tag" id="r2">–</span></div>
-      <div class="nums"><div><b id="i2">–</b><span>Current (A)</span></div><div><b id="p2">–</b><span>Power (VA)</span></div></div>
-      <div class="bar"><i id="b2"></i></div>
-      <p class="hint">Bar fills toward the overload limit.</p>
-    </section>
-
-    <section class="card">
-      <div class="row"><h2>Board temperature</h2><span class="tag" id="fan">Fan –</span></div>
-      <div class="nums"><div><b id="t">–</b><span>Degrees C</span></div></div>
-      <div class="bar"><i id="bt"></i></div>
-      <p class="hint">Bar fills toward the overheat cut-off.</p>
-    </section>
-
-    <section class="card">
-      <div class="row"><h2>Total power</h2><span class="tag" id="tot">–</span></div>
-      <svg viewBox="0 0 300 60" preserveAspectRatio="none" role="img" aria-label="Total power over the last readings"><polyline id="spark" points=""/></svg>
-      <p class="hint">Last 60 readings.</p>
+      <div class="row"><h2>Power over time</h2><span class="tag" id="fan">Fan –</span></div>
+      <div class="stats"><div><b id="wh">0</b><span>Energy this visit (Wh)</span></div><div><b id="pk">0</b><span>Peak (VA)</span></div></div>
+      <svg class="sp" viewBox="0 0 300 60" preserveAspectRatio="none" role="img" aria-label="Total power over the last readings"><polygon id="area" points=""/><polyline id="spark" points=""/></svg>
     </section>
   </div>
-
-  <footer>Power = current × 230 V (apparent power, unity power factor assumed).</footer>
 </main>
 
 <script>
-/* ---- Settings: change these ---- */
 const CONFIG = {
-  // Any URL that returns the device JSON. Example for Firebase Realtime Database:
   DATA_URL: "https://smart-electriccal-extension-default-rtdb.asia-southeast1.firebasedatabase.app/device.json",
-  POLL_MS: 2000,           // how often the page asks for data
-  OFFLINE_AFTER_MS: 8000,  // no new data for this long = offline
+  POLL_MS: 2000, OFFLINE_AFTER_MS: 8000,
   VOLTAGE: 230, OVERLOAD_A: 5, OVERHEAT_C: 45, FAN_ON_C: 35
 };
-/* Expected JSON from the ESP8266:
-   { "i1":0.42, "i2":1.10, "t":31, "r1":1, "r2":0, "fault":"none", "up":1234 }
-   "up" must change on every upload (e.g. seconds since boot) — it proves the device is alive.
-   fault: "none" | "overload" | "overheat".  Add ?demo to the page URL to preview without hardware. */
+/* JSON: {"i1":0.42,"i2":1.1,"t":31,"r1":1,"r2":0,"fault":"none","up":1234}  ("up" must change each upload). Add ?demo to preview. */
 
 const $ = id => document.getElementById(id);
 const demo = new URLSearchParams(location.search).has("demo");
-let last = null, lastKey = null, lastChange = 0, hist = [], demoUp = 0;
+const CIRC = 2 * Math.PI * 52;
+let last = null, lastKey = null, lastChange = 0, hist = [], wh = 0, peak = 0, demoUp = 0;
+
+const g = (id, sub) => `<div class="gauge"><svg viewBox="0 0 120 120"><circle class="tr" cx="60" cy="60" r="52"/><circle class="fg" id="${id}arc" cx="60" cy="60" r="52" stroke-dasharray="0 ${CIRC}"/></svg><div class="gv"><b id="${id}v">–</b><span>${sub}</span></div></div>`;
+const card = (id, title, body) => `<section class="card"><div class="row"><h2>${title}</h2><span class="tag" id="${id}tag">–</span></div>${body}<p class="hint" id="${id}h">&nbsp;</p></section>`;
+const gauge = (id, title, sub) => card(id, title, g(id, sub));
+const pair = (id, title) => card(id, title, `<div class="pair">${g(id, "amps")}${g(id + "p", "VA")}</div>`);
+$("grid").innerHTML = pair("s1", "Socket 1") + pair("s2", "Socket 2");
+$("grid2").insertAdjacentHTML("afterbegin", gauge("tm", "Board temperature", "°C"));
 
 const isOn = v => v === true || v === 1 || v === "1" || String(v).toUpperCase() === "ON";
 const num = v => (typeof v === "number" && isFinite(v)) ? v : null;
 const fix = (v, d) => v === null ? "–" : v.toFixed(d);
 
 function fake() {
-  demoUp += 2;
-  const cycle = Math.floor(demoUp / 20) % 3;
-  return { i1: cycle === 1 ? 0 : 0.6 + Math.random() * .3, i2: 1.8 + Math.random() * .4,
-           t: 30 + Math.random() * 3, r1: cycle !== 1, r2: true, fault: "none", up: demoUp };
+  demoUp += 2; const c = Math.floor(demoUp / 20) % 3;
+  return { i1: c === 1 ? 0 : 0.6 + Math.random() * .3, i2: 1.8 + Math.random() * .4, t: 30 + Math.random() * 3, r1: c !== 1, r2: true, fault: "none", up: demoUp };
 }
 
 async function poll() {
   try {
     let d;
     if (demo) d = fake();
-    else {
-      const r = await fetch(CONFIG.DATA_URL, { cache: "no-store" });
-      if (!r.ok) throw new Error("bad response");
-      d = await r.json();
-    }
-    if (!d || typeof d !== "object") throw new Error("no data");
+    else { const r = await fetch(CONFIG.DATA_URL, { cache: "no-store" }); if (!r.ok) throw 0; d = await r.json(); }
+    if (!d || typeof d !== "object") throw 0;
     const key = d.up !== undefined ? String(d.up) : JSON.stringify(d);
     if (key !== lastKey) {
-      lastKey = key; lastChange = Date.now();
-      const i1 = num(d.i1) || 0, i2 = num(d.i2) || 0;
-      hist.push((i1 + i2) * CONFIG.VOLTAGE);
-      if (hist.length > 60) hist.shift();
+      const now = Date.now(), p = ((num(d.i1) || 0) + (num(d.i2) || 0)) * CONFIG.VOLTAGE;
+      if (lastKey !== null) wh += p * Math.min((now - lastChange) / 1000, 10) / 3600;
+      lastKey = key; lastChange = now; peak = Math.max(peak, p);
+      hist.push(p); if (hist.length > 60) hist.shift();
     }
     last = d;
-  } catch (e) { /* keep last data; offline timer handles it */ }
+  } catch (e) {}
   render();
 }
 
-function ago(ms) {
-  const s = Math.round(ms / 1000);
-  if (s < 60) return s + " s ago";
-  if (s < 3600) return Math.round(s / 60) + " min ago";
-  return Math.round(s / 3600) + " h ago";
-}
+const ago = ms => { const s = Math.round(ms / 1000); return s < 60 ? s + " s ago" : s < 3600 ? Math.round(s / 60) + " min ago" : Math.round(s / 3600) + " h ago"; };
 
-function setSocket(n, cur, relay) {
-  $("i" + n).textContent = fix(cur, 2);
-  $("p" + n).textContent = cur === null ? "–" : Math.round(cur * CONFIG.VOLTAGE);
-  const tag = $("r" + n);
-  tag.textContent = relay === null ? "–" : relay ? "On" : "Off";
-  tag.className = "tag" + (relay ? " on" : "");
-  const ratio = cur === null ? 0 : Math.min(cur / CONFIG.OVERLOAD_A, 1);
-  const bar = $("b" + n);
-  bar.style.width = (ratio * 100) + "%";
-  bar.className = ratio >= 1 ? "bad" : ratio > .8 ? "warn" : "";
+function setArc(id, txt, ratio) {
+  $(id + "v").textContent = txt;
+  const arc = $(id + "arc");
+  arc.setAttribute("stroke-dasharray", (Math.min(Math.max(ratio, 0), 1) * CIRC) + " " + CIRC);
+  arc.setAttribute("class", "fg" + (ratio >= 1 ? " bad" : ratio > .8 ? " warn" : ""));
+}
+function setG(id, txt, ratio, tag, tagOn, hint) {
+  setArc(id, txt, ratio);
+  const t = $(id + "tag"); t.textContent = tag; t.className = "tag" + (tagOn ? " on" : "");
+  $(id + "h").textContent = hint;
 }
 
 function render() {
-  const age = Date.now() - lastChange;
-  const alive = last && age < CONFIG.OFFLINE_AFTER_MS;
-  const fault = last ? String(last.fault || "none").toLowerCase() : "none";
-  const faulted = alive && fault !== "none";
-
+  $("clock").textContent = new Date().toLocaleTimeString();
+  const age = Date.now() - lastChange, alive = last && age < CONFIG.OFFLINE_AFTER_MS;
+  const fault = last ? String(last.fault || "none").toLowerCase() : "none", faulted = alive && fault !== "none";
   document.body.dataset.state = !alive ? "offline" : faulted ? "fault" : "online";
 
   if (!last) { $("stText").textContent = "Waiting for device"; $("stSub").textContent = "No data received yet."; }
-  else if (!alive) { $("stText").textContent = "Device offline"; $("stSub").textContent = "Last seen " + ago(age) + ". Showing the last known readings."; }
-  else if (faulted) { $("stText").textContent = fault === "overheat" ? "Overheat – sockets off" : "Overload – sockets off"; $("stSub").textContent = "Press a button on the board to reset. Updated " + ago(age) + "."; }
+  else if (!alive) { $("stText").textContent = "Device offline"; $("stSub").textContent = "Last seen " + ago(age) + ". Showing last known readings."; }
+  else if (faulted) { $("stText").textContent = fault === "overheat" ? "Overheat – sockets off" : "Overload – sockets off"; $("stSub").textContent = "Press a button on the board to reset."; }
   else { $("stText").textContent = "Device online"; $("stSub").textContent = "Updated " + ago(age) + "."; }
-
   if (!last) return;
+
   const i1 = num(last.i1), i2 = num(last.i2), t = num(last.t);
   const r1 = last.r1 === undefined ? null : isOn(last.r1), r2 = last.r2 === undefined ? null : isOn(last.r2);
-  setSocket(1, i1, r1); setSocket(2, i2, r2);
+  const rl = r => r === null ? "–" : r ? "Relay on" : "Relay off";
+  const lim = CONFIG.OVERLOAD_A * CONFIG.VOLTAGE, p1 = (i1 || 0) * CONFIG.VOLTAGE, p2 = (i2 || 0) * CONFIG.VOLTAGE;
+  const lt = "Limit " + CONFIG.OVERLOAD_A + " A / " + lim + " VA";
+  setG("s1", fix(i1, 2), (i1 || 0) / CONFIG.OVERLOAD_A, rl(r1), r1, lt); setArc("s1p", Math.round(p1), p1 / lim);
+  setG("s2", fix(i2, 2), (i2 || 0) / CONFIG.OVERLOAD_A, rl(r2), r2, lt); setArc("s2p", Math.round(p2), p2 / lim);
+  setG("tm", fix(t, 0), (t || 0) / CONFIG.OVERHEAT_C, "Limit " + CONFIG.OVERHEAT_C + "°C", false, "Cut-off at " + CONFIG.OVERHEAT_C + " °C");
 
-  $("t").textContent = fix(t, 0);
-  const tr = t === null ? 0 : Math.min(t / CONFIG.OVERHEAT_C, 1);
-  $("bt").style.width = (tr * 100) + "%";
-  $("bt").className = tr >= 1 ? "bad" : tr > .8 ? "warn" : "";
   const fanOn = (t !== null && t > CONFIG.FAN_ON_C) || r1 || r2;
-  $("fan").textContent = "Fan " + (fanOn ? "on" : "off");
-  $("fan").className = "tag" + (fanOn ? " on" : "");
-
+  $("fan").textContent = "Fan " + (fanOn ? "on" : "off"); $("fan").className = "tag" + (fanOn ? " on" : "");
   const total = ((i1 || 0) + (i2 || 0)) * CONFIG.VOLTAGE;
-  $("tot").textContent = Math.round(total) + " VA";
+  $("tot").textContent = Math.round(total);
+  $("wh").textContent = wh.toFixed(2); $("pk").textContent = Math.round(peak);
   const max = Math.max(100, ...hist);
-  $("spark").setAttribute("points", hist.map((v, k) => (k * 300 / Math.max(hist.length - 1, 1)).toFixed(1) + "," + (56 - v / max * 52).toFixed(1)).join(" "));
+  const pts = hist.map((v, k) => (k * 300 / Math.max(hist.length - 1, 1)).toFixed(1) + "," + (56 - v / max * 50).toFixed(1)).join(" ");
+  $("spark").setAttribute("points", pts);
+  $("area").setAttribute("points", hist.length ? pts + " 300,60 0,60" : "");
 }
 
-poll();
-setInterval(poll, CONFIG.POLL_MS);
-setInterval(render, 1000);
+poll(); setInterval(poll, CONFIG.POLL_MS); setInterval(render, 1000);
 </script>
 </body>
 </html>
