@@ -178,24 +178,4 @@ function render() {
 poll(); setInterval(poll, CONFIG.POLL_MS); setInterval(render, 1000);
 </script>
 </body>
-</html>* CONFIG.VOLTAGE;
-  const lt = "Limit " + CONFIG.OVERLOAD_A + " A / " + lim + " VA";
-  setG("s1", fix(i1, 2), (i1 || 0) / CONFIG.OVERLOAD_A, rl(r1), r1, lt); setArc("s1p", Math.round(p1), p1 / lim);
-  setG("s2", fix(i2, 2), (i2 || 0) / CONFIG.OVERLOAD_A, rl(r2), r2, lt); setArc("s2p", Math.round(p2), p2 / lim);
-  setG("tm", fix(t, 0), (t || 0) / CONFIG.OVERHEAT_C, "Limit " + CONFIG.OVERHEAT_C + "°C", false, "Cut-off at " + CONFIG.OVERHEAT_C + " °C");
-
-  const fanOn = (t !== null && t > CONFIG.FAN_ON_C) || r1 || r2;
-  $("fan").textContent = "Fan " + (fanOn ? "on" : "off"); $("fan").className = "tag" + (fanOn ? " on" : "");
-  const total = ((i1 || 0) + (i2 || 0)) * CONFIG.VOLTAGE;
-  $("tot").textContent = Math.round(total);
-  $("wh").textContent = wh.toFixed(2); $("pk").textContent = Math.round(peak);
-  const max = Math.max(100, ...hist);
-  const pts = hist.map((v, k) => (k * 300 / Math.max(hist.length - 1, 1)).toFixed(1) + "," + (56 - v / max * 50).toFixed(1)).join(" ");
-  $("spark").setAttribute("points", pts);
-  $("area").setAttribute("points", hist.length ? pts + " 300,60 0,60" : "");
-}
-
-poll(); setInterval(poll, CONFIG.POLL_MS); setInterval(render, 1000);
-</script>
-</body>
 </html>
