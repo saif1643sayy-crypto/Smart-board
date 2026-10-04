@@ -32,7 +32,11 @@ body[data-state=offline] .card{opacity:.5;filter:grayscale(.7)}
 .card h2{margin:0;font-size:1rem;font-weight:600;color:var(--mute)}
 .tag{font-size:.8rem;font-weight:600;padding:3px 11px;border-radius:99px;background:#ffffff14;color:var(--mute)}
 .tag.on{background:#35e0a122;color:var(--ok)}
-#s1tag,#s2tag{font-size:1rem;padding:6px 16px}#s1tag.on,#s2tag.on{box-shadow:0 0 16px #35e0a155}
+#s1tag,#s2tag{font-size:1rem;padding:6px 16px}
+.swbtn{display:block;width:100%;margin-top:12px;padding:12px;border:0;border-radius:12px;font-weight:600;font-size:1rem;font-family:inherit;background:var(--ok);color:#052b1f;cursor:pointer}
+.swbtn.off{background:#ff547022;color:var(--bad);border:1px solid #ff547066}
+.swbtn:disabled{opacity:.35;cursor:not-allowed}
+.msg{min-height:1.2em;margin:10px 4px 0;color:var(--warn);font-size:.9rem}#s1tag.on,#s2tag.on{box-shadow:0 0 16px #35e0a155}
 .gauge{position:relative;width:170px;margin:14px auto 6px}
 .gauge svg{display:block;width:100%;transform:rotate(-90deg)}
 .gauge circle{fill:none;stroke-width:9;stroke-linecap:round}
@@ -60,6 +64,7 @@ footer{margin-top:18px;font-size:.78rem;color:var(--mute)}
     <div class="tp"><b id="tot">–</b><span>Total power (VA)</span></div>
   </section>
 
+  <p class="msg" id="ctlMsg"></p>
   <div class="grid" id="grid"></div>
 
   <div class="grid" id="grid2">
@@ -87,9 +92,45 @@ let last = null, lastKey = null, lastChange = 0, hist = [], wh = 0, peak = 0, de
 const g = (id, sub) => `<div class="gauge"><svg viewBox="0 0 120 120"><circle class="tr" cx="60" cy="60" r="52"/><circle class="fg" id="${id}arc" cx="60" cy="60" r="52" stroke-dasharray="0 ${CIRC}"/></svg><div class="gv"><b id="${id}v">–</b><span>${sub}</span></div></div>`;
 const card = (id, title, body) => `<section class="card"><div class="row"><h2>${title}</h2><span class="tag" id="${id}tag">–</span></div>${body}<p class="hint" id="${id}h">&nbsp;</p></section>`;
 const gauge = (id, title, sub) => card(id, title, g(id, sub));
-const pair = (id, title) => card(id, title, `<div class="pair">${g(id, "amps")}${g(id + "p", "VA")}</div>`);
+const pair = (id, title) => card(id, title, `<div class="pair">${g(id, "amps")}${g(id + "p", "VA")}</div><button class="swbtn" id="${id}btn" disabled>–</button>`);
 $("grid").innerHTML = pair("s1", "Socket 1") + pair("s2", "Socket 2");
 $("grid2").insertAdjacentHTML("afterbegin", gauge("tm", "Board temperature", "°C"));
+
+/* ---- Switching from the website ----
+   The page only sends a request ("set socket N to ON/OFF"). The board decides, and the page
+   always shows the state the board reports back, so the physical buttons and the site never disagree. */
+const rel = { 1: null, 2: null };
+let pending = null;
+const msg = t => { $("ctlMsg").textContent = t || ""; };
+function getPw() {
+  try { const p = sessionStorage.getItem("pw"); if (p) return p; } catch (e) {}
+  return prompt("Control password:") || "";
+}
+async function sendCmd(n, want) {
+  if (demo) return msg("Demo mode: switching is disabled.");
+  if (pending) return;
+  const pw = getPw(); if (!pw) return;
+  pending = { n, want, until: Date.now() + 9000 }; msg("Sending…"); render();
+  try {
+    const r = await fetch(CONFIG.DATA_URL.replace("device.json", "cmd/" + encodeURIComponent(pw) + ".json"), { method: "PUT", body: JSON.stringify({ id: String(Date.now()), n, s: want ? 1 : 0 }) });
+    if (r.status === 401 || r.status === 403) { try { sessionStorage.removeItem("pw"); } catch (e) {} pending = null; msg("Wrong password."); }
+    else if (!r.ok) { pending = null; msg("Could not send. Try again."); }
+    else { try { sessionStorage.setItem("pw", pw); } catch (e) {} }
+  } catch (e) { pending = null; msg("Could not send. Check your connection."); }
+  render();
+}
+$("s1btn").onclick = () => sendCmd(1, !rel[1]);
+$("s2btn").onclick = () => sendCmd(2, !rel[2]);
+function updateButtons(alive, faulted) {
+  for (const n of [1, 2]) {
+    const b = $("s" + n + "btn"), on = rel[n];
+    b.textContent = pending && pending.n === n ? "Working…" : on ? "Turn OFF" : "Turn ON";
+    b.className = "swbtn" + (on ? " off" : "");
+    b.disabled = !alive || faulted || on === null || !!pending;
+  }
+  if (faulted) msg("Fault: reset with the button on the board first.");
+  else if ($("ctlMsg").textContent.startsWith("Fault")) msg("");
+}
 
 const isOn = v => v === true || v === 1 || v === "1" || String(v).toUpperCase() === "ON";
 const num = v => (typeof v === "number" && isFinite(v)) ? v : null;
@@ -152,12 +193,17 @@ function render() {
     setG("tm", "–", 0, "Offline", false, "Cut-off at " + CONFIG.OVERHEAT_C + " °C");
     $("tot").textContent = "–";
     $("fan").textContent = "Fan –"; $("fan").className = "tag";
+    rel[1] = rel[2] = null; pending = null; updateButtons(false, false);
     return;
   }
 
   const i1 = num(last.i1), i2 = num(last.i2), t = num(last.t);
   const r1 = last.r1 === undefined ? null : isOn(last.r1), r2 = last.r2 === undefined ? null : isOn(last.r2);
   const rl = r => r === null ? "–" : r ? "● Socket ON" : "○ Socket OFF";
+  rel[1] = r1; rel[2] = r2;
+  if (pending && rel[pending.n] === pending.want) { pending = null; msg(""); }
+  else if (pending && Date.now() > pending.until) { pending = null; msg("No response from the board."); }
+  updateButtons(true, faulted);
   const lim = CONFIG.OVERLOAD_A * CONFIG.VOLTAGE, p1 = (i1 || 0) * CONFIG.VOLTAGE, p2 = (i2 || 0) * CONFIG.VOLTAGE;
   const lt = "Limit " + CONFIG.OVERLOAD_A + " A / " + lim + " VA";
   setG("s1", fix(i1, 2), (i1 || 0) / CONFIG.OVERLOAD_A, rl(r1), r1, lt); setArc("s1p", Math.round(p1), p1 / lim);
