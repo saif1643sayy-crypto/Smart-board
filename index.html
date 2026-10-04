@@ -124,7 +124,7 @@ $("s2btn").onclick = () => sendCmd(2, !rel[2]);
 function updateButtons(alive, faulted) {
   for (const n of [1, 2]) {
     const b = $("s" + n + "btn"), on = rel[n];
-    b.textContent = pending && pending.n === n ? "Working…" : on ? "Turn OFF" : "Turn ON";
+    b.textContent = pending && pending.n === n ? "Working…" : on === null ? "Device offline" : on ? "Turn OFF" : "Turn ON";
     b.className = "swbtn" + (on ? " off" : "");
     b.disabled = !alive || faulted || on === null || !!pending;
   }
